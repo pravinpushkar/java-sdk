@@ -13,31 +13,35 @@ limitations under the License.
 
 package io.dapr.client.domain;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
- * Domain object for response from subscribeToConfiguration API.
+ * Domain object for response from subscribeConfiguration API.
  */
 public class SubscribeConfigurationResponse {
-  private final String id;
+  /**
+   * Subscription id for the items subscribed to.
+   */
+  private final String subscriptionId;
   private final List<ConfigurationItem> items;
 
   /**
    * Constructor for SubscribeConfigurationResponse.
    *
-   * @param id        Subscription id for the items subscribed to.This id is returned by subscribeToConfiguration API.
+   * @param id        Subscription id for the items subscribed to.This id is returned by subscribeConfiguration API.
    * @param items     List of configuration items user subscribed to.
    */
   public SubscribeConfigurationResponse(String id, List<ConfigurationItem> items) {
-    this.id = id;
-    this.items = items;
+    this.subscriptionId = id;
+    this.items = Collections.unmodifiableList(items);
   }
 
   public List<ConfigurationItem> getItems() {
     return items;
   }
 
-  public String getId() {
-    return id;
+  public String getSubscriptionId() {
+    return subscriptionId;
   }
 }

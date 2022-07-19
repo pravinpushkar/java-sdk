@@ -198,11 +198,11 @@ public class DaprPreviewClientGrpcTest {
 			return null;
 		}).when(daprStub).subscribeConfigurationAlpha1(any(DaprProtos.SubscribeConfigurationRequest.class), any());
 
-		Iterator<SubscribeConfigurationResponse> itr = previewClient.subscribeToConfiguration(CONFIG_STORE_NAME, "configkey1").toIterable().iterator();
+		Iterator<SubscribeConfigurationResponse> itr = previewClient.subscribeConfiguration(CONFIG_STORE_NAME, "configkey1").toIterable().iterator();
 		assertTrue(itr.hasNext());
 		SubscribeConfigurationResponse res = itr.next();
 		assertEquals("configkey1", res.getItems().get(0).getKey());
-		assertEquals("subscription_id", res.getId());
+		assertEquals("subscription_id", res.getSubscriptionId());
 		assertFalse(itr.hasNext());
 	}
 
@@ -231,11 +231,11 @@ public class DaprPreviewClientGrpcTest {
 		Map<String, String> reqMetadata = new HashMap<>();
 		List<String> keys = Arrays.asList("configkey1");
 
-		Iterator<SubscribeConfigurationResponse> itr = previewClient.subscribeToConfiguration(CONFIG_STORE_NAME, keys, reqMetadata).toIterable().iterator();
+		Iterator<SubscribeConfigurationResponse> itr = previewClient.subscribeConfiguration(CONFIG_STORE_NAME, keys, reqMetadata).toIterable().iterator();
 		assertTrue(itr.hasNext());
 		SubscribeConfigurationResponse res = itr.next();
 		assertEquals("configkey1", res.getItems().get(0).getKey());
-		assertEquals("subscription_id", res.getId());
+		assertEquals("subscription_id", res.getSubscriptionId());
 		assertFalse(itr.hasNext());
 	}
 
@@ -250,16 +250,16 @@ public class DaprPreviewClientGrpcTest {
 		}).when(daprStub).subscribeConfigurationAlpha1(any(DaprProtos.SubscribeConfigurationRequest.class), any());
 
 		assertThrowsDaprException(ExecutionException.class, () -> {
-			previewClient.subscribeToConfiguration(CONFIG_STORE_NAME, "key").blockFirst();
+			previewClient.subscribeConfiguration(CONFIG_STORE_NAME, "key").blockFirst();
 		});
 
 		assertThrows(IllegalArgumentException.class, () -> {
-			previewClient.subscribeToConfiguration("", "key").blockFirst();
+			previewClient.subscribeConfiguration("", "key").blockFirst();
 		});
 
 		SubscribeConfigurationRequest req = new SubscribeConfigurationRequest(CONFIG_STORE_NAME, null);
 		assertThrows(IllegalArgumentException.class, () -> {
-			previewClient.subscribeToConfiguration(req).blockFirst();
+			previewClient.subscribeConfiguration(req).blockFirst();
 		});
 	}
 
@@ -279,7 +279,7 @@ public class DaprPreviewClientGrpcTest {
 		}).when(daprStub).unsubscribeConfigurationAlpha1(any(DaprProtos.UnsubscribeConfigurationRequest.class), any());
 
 		UnsubscribeConfigurationResponse
-				response = previewClient.unsubscribeToConfiguration("subscription_id", CONFIG_STORE_NAME).block();
+				response = previewClient.unsubscribeConfiguration("subscription_id", CONFIG_STORE_NAME).block();
 		assertTrue(response.getIsUnsubscribed());
 		assertEquals("unsubscribed_message", response.getMessage());
 	}
@@ -295,16 +295,16 @@ public class DaprPreviewClientGrpcTest {
 		}).when(daprStub).unsubscribeConfigurationAlpha1(any(DaprProtos.UnsubscribeConfigurationRequest.class), any());
 
 		assertThrowsDaprException(ExecutionException.class, () -> {
-			previewClient.unsubscribeToConfiguration("subscription_id", CONFIG_STORE_NAME).block();
+			previewClient.unsubscribeConfiguration("subscription_id", CONFIG_STORE_NAME).block();
 		});
 
 		assertThrows(IllegalArgumentException.class, () -> {
-			previewClient.unsubscribeToConfiguration("", CONFIG_STORE_NAME).block();
+			previewClient.unsubscribeConfiguration("", CONFIG_STORE_NAME).block();
 		});
 
 		UnsubscribeConfigurationRequest req = new UnsubscribeConfigurationRequest("subscription_id", "");
 		assertThrows(IllegalArgumentException.class, () -> {
-			previewClient.unsubscribeToConfiguration(req).block();
+			previewClient.unsubscribeConfiguration(req).block();
 		});
 	}
 
