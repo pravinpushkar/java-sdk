@@ -45,7 +45,6 @@ import io.dapr.serializer.DaprObjectSerializer;
 import io.dapr.serializer.DefaultObjectSerializer;
 import io.dapr.utils.NetworkUtils;
 import io.dapr.utils.TypeRef;
-import io.dapr.v1.DaprProtos;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -790,7 +789,17 @@ public class DaprClientHttp extends AbstractDaprClient {
       ).map(
               response -> {
                 try {
-                  return buildConfigItems(response);
+                  JsonNode root = INTERNAL_SERIALIZER.parseNode(response.getBody());
+                  List<ConfigurationItem> result = new ArrayList<>();
+                  for (Iterator<JsonNode> it = root.elements(); it.hasNext(); ) {
+                    JsonNode node = it.next();
+                    String key = node.path("key").asText();
+                    String value = node.path("value").asText();
+                    String version = node.path("version").asText();
+                    ConfigurationItem configurationItem = new ConfigurationItem(key, value, version);
+                    result.add(configurationItem);
+                  }
+                  return result;
                 } catch (IOException e) {
                   throw new RuntimeException(e);
                 }
@@ -799,20 +808,6 @@ public class DaprClientHttp extends AbstractDaprClient {
     } catch (Exception ex) {
       return DaprException.wrapMono(ex);
     }
-  }
-
-  private List<ConfigurationItem> buildConfigItems(DaprHttp.Response response) throws IOException {
-    JsonNode root = INTERNAL_SERIALIZER.parseNode(response.getBody());
-    List<ConfigurationItem> result = new ArrayList<>();
-    for (Iterator<JsonNode> it = root.elements(); it.hasNext(); ) {
-      JsonNode node = it.next();
-      String key = node.path("key").asText();
-      String value = node.path("value").asText();
-      String version = node.path("version").asText();
-      ConfigurationItem configurationItem = new ConfigurationItem(key, value, version);
-      result.add(configurationItem);
-    }
-    return result;
   }
 
   /**
@@ -836,27 +831,27 @@ public class DaprClientHttp extends AbstractDaprClient {
       Map<String, List<String>> queryParams = new HashMap<>();
       queryParams.put("key", Collections.unmodifiableList(keys));
 
-      return Flux.from(this.client.invokeApi(
-              DaprHttp.HttpMethods.GET.name(),
-              pathSegments, queryParams,
-              (String) null, null, null)
-      ).map(it -> {
-        try {
-          return buildResp(it);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      });
+       SubscribeConfigurationResponse res = Mono.subscriberContext().flatMap(
+              context -> this.client
+                      .invokeApi(
+                              DaprHttp.HttpMethods.GET.name(),
+                              pathSegments, queryParams,
+                              (String) null, null, context)
+      ).map(
+              response -> {
+                try {
+                  JsonNode root = INTERNAL_SERIALIZER.parseNode(response.getBody());
+                  String subscriptionId = root.path("id").asText();
+                  return new SubscribeConfigurationResponse(subscriptionId, new ArrayList<>());
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              }
+      ).block();
+      return Flux.just(res);
     } catch (Exception ex) {
       return DaprException.wrapFlux(ex);
     }
-  }
-
-  private SubscribeConfigurationResponse buildResp(DaprHttp.Response response) throws IOException {
-    JsonNode root = INTERNAL_SERIALIZER.parseNode(response.getBody());
-    System.out.println("====== Subscribe=========");
-    System.out.println(root.toPrettyString());
-    return new SubscribeConfigurationResponse("some ID", new ArrayList<>());
   }
 
   /**
@@ -882,7 +877,11 @@ public class DaprClientHttp extends AbstractDaprClient {
       ).map(
               response -> {
                 try {
-                  return buildUnsubscribeConfigResp(response);
+                  JsonNode root = INTERNAL_SERIALIZER.parseNode(response.getBody());
+                  boolean ok = root.path("ok").asBoolean();
+                  String message = root.path("message").asText();
+                  UnsubscribeConfigurationResponse result = new UnsubscribeConfigurationResponse(ok, message);
+                  return result;
                 } catch (IOException e) {
                   throw new RuntimeException(e);
                 }
@@ -891,14 +890,6 @@ public class DaprClientHttp extends AbstractDaprClient {
     } catch (Exception ex) {
       return DaprException.wrapMono(ex);
     }
-  }
-
-  private UnsubscribeConfigurationResponse buildUnsubscribeConfigResp(DaprHttp.Response response) throws IOException {
-    JsonNode root = INTERNAL_SERIALIZER.parseNode(response.getBody());
-    boolean ok = root.path("ok").asBoolean();
-    String message = root.path("message").asText();
-    UnsubscribeConfigurationResponse result = new UnsubscribeConfigurationResponse(ok, message);
-    return result;
   }
 
   /**
