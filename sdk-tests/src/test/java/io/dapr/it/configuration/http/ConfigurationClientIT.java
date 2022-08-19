@@ -39,14 +39,6 @@ public class ConfigurationClientIT extends BaseIT {
             "myconfigkey3", "myconfigvalue3||1"
     };
 
-    private static String[] updateCmd = new String[] {
-            "docker", "exec", "dapr_redis", "redis-cli",
-            "MSET",
-            "myconfigkey1", "update_myconfigvalue1||2",
-            "myconfigkey2", "update_myconfigvalue2||2",
-            "myconfigkey3", "update_myconfigvalue3||2"
-    };
-
     @BeforeClass
     public static void init() throws Exception {
         daprRun = startDaprApp(ConfigurationClientIT.class.getSimpleName(), 5000);
@@ -97,12 +89,13 @@ public class ConfigurationClientIT extends BaseIT {
 
     @Test
     public void subscribeAndUnsubscribeConfiguration() {
-        AtomicReference<String> subId= new AtomicReference<>("");
+        AtomicReference<String> subId= new AtomicReference<>();
         Flux<SubscribeConfigurationResponse> outFlux = daprPreviewClient
                 .subscribeConfiguration(CONFIG_STORE_NAME, "myconfigkey1", "myconfigkey2");
         outFlux.subscribe(items -> {
             subId.set(items.getSubscriptionId());
         });
+        System.out.println(subId.get() + " < pravin id > ");
         assertTrue(subId.get().length() > 0);
 
         UnsubscribeConfigurationResponse res = daprPreviewClient.unsubscribeConfiguration(
