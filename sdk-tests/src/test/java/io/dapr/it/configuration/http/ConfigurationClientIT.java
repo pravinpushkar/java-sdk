@@ -1,5 +1,6 @@
 package io.dapr.it.configuration.http;
 
+import io.dapr.client.DaprApiProtocol;
 import io.dapr.client.DaprClientBuilder;
 import io.dapr.client.DaprPreviewClient;
 import io.dapr.client.domain.ConfigurationItem;
@@ -41,7 +42,16 @@ public class ConfigurationClientIT extends BaseIT {
 
     @BeforeClass
     public static void init() throws Exception {
-        daprRun = startDaprApp(ConfigurationClientIT.class.getSimpleName(), 5000);
+        daprRun = startDaprApp(
+            ConfigurationClientIT.class.getSimpleName(),
+            "You're up and running!",
+            null,
+            true,
+            true,
+            5000,
+            DaprApiProtocol.GRPC,
+            DaprApiProtocol.HTTP
+        );
         daprRun.switchToHTTP();
         daprPreviewClient = new DaprClientBuilder().buildPreviewClient();
     }
