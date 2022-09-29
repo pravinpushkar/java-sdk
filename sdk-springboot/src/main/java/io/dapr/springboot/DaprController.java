@@ -140,7 +140,7 @@ public class DaprController {
     return Mono.fromRunnable(
         () -> {
           try {
-            DaprRuntime.getInstance().handleConfigurationChange(pathVarsMap.get("configStore"),obj);
+            ConfigurationUpdateHandler.getInstance().handleConfigurationChange(pathVarsMap.get("configStore"),obj);
           } catch (Exception e) {
             throw new RuntimeException(e);
           }

@@ -15,13 +15,12 @@ package io.dapr.examples.configuration.http;
 
 import io.dapr.client.domain.SubscribeConfigurationResponse;
 import io.dapr.examples.DaprApplication;
-import io.dapr.springboot.DaprRuntime;
+import io.dapr.springboot.ConfigurationUpdateHandler;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 
-import java.util.Collections;
 import java.util.function.BiConsumer;
 
 /**
@@ -53,7 +52,7 @@ public class ConfigurationHandler {
       });
     };
 
-    DaprRuntime.getInstance().registerConfigurationChangeHandler("configstore", biConsumer);
+    ConfigurationUpdateHandler.getInstance().registerConfigurationChangeHandler("configstore", biConsumer);
     DaprApplication.start(port);
   }
 }
